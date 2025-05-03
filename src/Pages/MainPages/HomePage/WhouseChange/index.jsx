@@ -601,7 +601,7 @@ function WaterChange() {
         width: 150,
       })
       t_columns.push({
-        title: 'TDS(mg/L)',
+        title: 'pH',  //标题由TDS修改为pH，数据来源未修改
         dataIndex: 'tds',
         key: 'tds',
         align: 'center',

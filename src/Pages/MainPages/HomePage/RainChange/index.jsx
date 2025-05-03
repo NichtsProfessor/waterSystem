@@ -159,10 +159,10 @@ function RainChange() {
                 °
               </Descriptions.Item>
               <Descriptions.Item
-                label="TDS"
+                label="pH"  //标题由TDS修改为pH，数据来源未修改
                 style={{ color: 'white', borderBottom: '1px solid white' }}
                 span={3}>
-                {dataSource.tds === undefined ? 10 : dataSource.tds}mg/L
+                {dataSource.tds === undefined ? 7.0 : dataSource.tds}
               </Descriptions.Item>
               <Descriptions.Item
                 label="数据x"
