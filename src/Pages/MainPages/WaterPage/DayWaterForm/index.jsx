@@ -32,20 +32,6 @@ import './index.css'
 
 // 仪表盘，折线图，雷达图的模拟数据
 const mockData = {
-  gauge: { 
-    value: 28,         // 温度值
-    name: '实时温度',  // 温度显示
-    unit: '℃'         // 添加单位
-  },
-  line: {
-    xData: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'],
-    series: [
-      { 
-        name: 'TDS',   // TDS水质指标
-        data: [150, 220, 280, 190, 240, 260] // 典型TDS值范围(100-300)
-      }
-    ]
-  },
   radar: {
     indicator: [
       { name: '稳定性', max: 100 },
@@ -627,7 +613,7 @@ function DayWaterForm() {
         width: 150,
       })
       t_columns.push({
-        title: 'TDS(mg/L)',
+        title: 'pH', //标题由TDS修改为pH，数据来源未修改
         dataIndex: 'tds',
         key: 'tds',
         align: 'center',
@@ -1387,6 +1373,36 @@ function DayWaterForm() {
   const lineRef = useRef(null);
   const radarRef = useRef(null);
 
+    // 新增状态管理实时数据
+  const [chartData, setChartData] = useState({
+    gauge: { value: 0, name: '实时温度', unit: '℃' },
+    line: { xData: [], series: [{ name: 'pH', data: [] }] }
+  });
+
+    // 数据更新监听
+  useEffect(() => {
+    if (dataSource.length > 0) {
+      const newData = {
+        gauge: {
+          value: dataSource[dataSource.length-1].temperature,
+          name: '实时温度',
+          unit: '℃'
+        },
+        line: {
+          xData: dataSource.map(item => {
+            const date = new Date(item.update_time);
+            return `${date.getHours()}:${date.getMinutes().toString().padStart(2,'0')}`;
+          }),
+          series: [{
+            name: 'pH',
+            data: dataSource.map(item => item.tds)
+          }]
+        }
+      };
+      setChartData(newData);
+    }
+  }, [dataSource]);
+
   // 添加图表初始化逻辑到现有useEffect
   useEffect(() => {
     const initCharts = () => {
@@ -1435,7 +1451,7 @@ function DayWaterForm() {
             formatter: (v) => v + '℃'
           },
           radius: '85%', 
-          data: [mockData.gauge]
+          data: [chartData.gauge]
         }]
       });
 
@@ -1444,11 +1460,11 @@ function DayWaterForm() {
       lineChart.setOption({
         xAxis: { 
           type: 'category', 
-          data: mockData.line.xData 
+          data: chartData.line.xData 
         },
         yAxis: {
           type: 'value',
-          name: 'TDS (mg/L)',  // 添加水质单位
+          name: 'pH',  // 添加水质单位
           nameTextStyle: {
             color: '#2980b9',  // 蓝色系
             fontSize: 12,
@@ -1458,7 +1474,7 @@ function DayWaterForm() {
             color: '#2980b9' // 刻度值颜色
           }
         },
-        series: mockData.line.series.map(s => ({
+        series: chartData.line.series.map(s => ({
           ...s,
           type: 'line',
           smooth: true,
@@ -1489,10 +1505,11 @@ function DayWaterForm() {
     };
 
     initCharts();
-    const resizeHandler = () => initCharts();
-    window.addEventListener('resize', resizeHandler);
-    return () => window.removeEventListener('resize', resizeHandler);
-  }, []);
+    const handleResize = () => initCharts();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [chartData]); // 添加数据依赖
+
 
   useEffect(() => {
     updateData()
@@ -1584,7 +1601,7 @@ function DayWaterForm() {
             <div className="chartTitle" style={{ 
               fontSize: '18px',
               marginBottom: '20px' 
-            }}>TDS数据</div>
+            }}>pH数据</div>
             <div ref={lineRef} style={{ 
                width: '100%',
                height: '320px' 
